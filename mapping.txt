@@ -1,0 +1,4 @@
+Account Class: 4-5
+Account Type: 10-6
+General Account: 11-7
+Detail Account:12-8
