@@ -1,0 +1,1 @@
+ALTER TABLE "strategies" ADD COLUMN "how_it_works" text[];
