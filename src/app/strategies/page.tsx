@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { eq, and } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
+import { subscriptions } from "@/db/schema";
 import Nav from "@/components/nav";
 import StrategyGrid from "./strategy-grid";
 
@@ -15,6 +17,11 @@ export default async function StrategiesPage() {
     orderBy: (s, { asc }) => [asc(s.name)],
   });
 
+  const mySubscriptions = await db.query.subscriptions.findMany({
+    where: and(eq(subscriptions.userId, user.id), eq(subscriptions.status, "active")),
+  });
+  const subscribedStrategyIds = new Set(mySubscriptions.map((s) => s.strategyId));
+
   return (
     <div className="w-full min-h-screen">
       <Nav active="strategies" userEmail={user.email} />
@@ -26,7 +33,7 @@ export default async function StrategiesPage() {
             Browse and subscribe to algorithmic trading strategies
           </p>
         </div>
-        <StrategyGrid strategies={strategies} />
+        <StrategyGrid strategies={strategies} subscribedStrategyIds={[...subscribedStrategyIds]} />
       </main>
     </div>
   );

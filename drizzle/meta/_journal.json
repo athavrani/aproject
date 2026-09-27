@@ -15,6 +15,13 @@
       "when": 1790525499631,
       "tag": "0001_dark_tinkerer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790528078533,
+      "tag": "0002_black_iron_lad",
+      "breakpoints": true
     }
   ]
 }

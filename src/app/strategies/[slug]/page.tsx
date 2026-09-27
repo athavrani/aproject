@@ -39,6 +39,14 @@ export default async function StrategyDetailPage({
     .from(subscriptions)
     .where(and(eq(subscriptions.strategyId, strategy.id), eq(subscriptions.status, "active")));
 
+  const mySubscription = await db.query.subscriptions.findFirst({
+    where: and(
+      eq(subscriptions.strategyId, strategy.id),
+      eq(subscriptions.userId, user.id),
+      eq(subscriptions.status, "active")
+    ),
+  });
+
   return (
     <div className="w-full min-h-screen">
       <Nav active="strategies" userEmail={user.email} />
@@ -66,14 +74,32 @@ export default async function StrategyDetailPage({
               ${(strategy.priceCents / 100).toFixed(0)}
               <span className="text-[15px] font-medium text-text-secondary">/{strategy.billingCycle === "monthly" ? "mo" : strategy.billingCycle}</span>
             </div>
-            <button
-              type="button"
-              disabled
-              className="bg-accent text-white rounded-lg px-7 py-3 font-semibold text-sm opacity-55 cursor-not-allowed"
-            >
-              Buy Strategy
-            </button>
-            <div className="text-xs text-text-secondary text-right">Purchase flow — coming in Phase 2</div>
+            {mySubscription ? (
+              <>
+                <div className="bg-[#E3F3EA] text-[#16794F] rounded-lg px-7 py-3 font-semibold text-sm">
+                  ✓ Subscribed
+                </div>
+                <a href="/my-strategies" className="text-xs text-accent font-medium">View in My Strategies</a>
+              </>
+            ) : strategy.stripePriceId ? (
+              <form action="/api/checkout" method="POST">
+                <input type="hidden" name="strategyId" value={strategy.id} />
+                <button
+                  type="submit"
+                  className="bg-accent text-white rounded-lg px-7 py-3 font-semibold text-sm cursor-pointer"
+                >
+                  Buy Strategy
+                </button>
+                <div className="text-xs text-text-secondary text-right mt-2">Billed {strategy.billingCycle} · Cancel anytime</div>
+              </form>
+            ) : (
+              <>
+                <button type="button" disabled className="bg-accent text-white rounded-lg px-7 py-3 font-semibold text-sm opacity-55 cursor-not-allowed">
+                  Buy Strategy
+                </button>
+                <div className="text-xs text-text-secondary text-right">Not yet available for purchase</div>
+              </>
+            )}
           </div>
         </div>
 

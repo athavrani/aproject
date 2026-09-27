@@ -16,7 +16,14 @@ function formatPrice(cents: number) {
   return `$${(cents / 100).toFixed(0)}/mo`;
 }
 
-export default function StrategyGrid({ strategies }: { strategies: Strategy[] }) {
+export default function StrategyGrid({
+  strategies,
+  subscribedStrategyIds,
+}: {
+  strategies: Strategy[];
+  subscribedStrategyIds: string[];
+}) {
+  const subscribedSet = useMemo(() => new Set(subscribedStrategyIds), [subscribedStrategyIds]);
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -47,8 +54,15 @@ export default function StrategyGrid({ strategies }: { strategies: Strategy[] })
                 <div className="font-display font-semibold text-lg">{s.name}</div>
                 <div className="text-sm text-text-secondary">{s.category} · {s.assetClass}</div>
               </div>
-              <div className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${RISK_STYLES[s.riskLevel]}`}>
-                {s.riskLevel[0].toUpperCase() + s.riskLevel.slice(1)} risk
+              <div className="flex flex-col items-end gap-1.5">
+                <div className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${RISK_STYLES[s.riskLevel]}`}>
+                  {s.riskLevel[0].toUpperCase() + s.riskLevel.slice(1)} risk
+                </div>
+                {subscribedSet.has(s.id) && (
+                  <div className="text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap bg-[#EDF1FC] text-accent">
+                    ✓ Subscribed
+                  </div>
+                )}
               </div>
             </div>
             <p className="text-sm text-text-secondary leading-relaxed">{s.description}</p>

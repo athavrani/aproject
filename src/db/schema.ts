@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   pgSchema,
   pgTable,
@@ -28,6 +29,7 @@ export const profiles = pgTable("profiles", {
     .primaryKey()
     .references(() => authUsers.id, { onDelete: "cascade" }),
   fullName: text("full_name"),
+  stripeCustomerId: text("stripe_customer_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -48,6 +50,8 @@ export const strategies = pgTable("strategies", {
   winRateSample: numeric("win_rate_sample", { precision: 5, scale: 2 }),
   sharpeSample: numeric("sharpe_sample", { precision: 4, scale: 2 }),
   howItWorks: text("how_it_works").array(),
+  stripePriceId: text("stripe_price_id"),
+  stripeProductId: text("stripe_product_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -62,8 +66,29 @@ export const subscriptions = pgTable("subscriptions", {
     .notNull()
     .references(() => strategies.id, { onDelete: "restrict" }),
   status: subscriptionStatusEnum("status").notNull().default("active"),
+  stripeSubscriptionId: text("stripe_subscription_id").unique(),
+  stripeCheckoutSessionId: text("stripe_checkout_session_id"),
   subscribedAt: timestamp("subscribed_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
   canceledAt: timestamp("canceled_at", { withTimezone: true }),
 });
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  strategy: one(strategies, {
+    fields: [subscriptions.strategyId],
+    references: [strategies.id],
+  }),
+  profile: one(profiles, {
+    fields: [subscriptions.userId],
+    references: [profiles.id],
+  }),
+}));
+
+export const strategiesRelations = relations(strategies, ({ many }) => ({
+  subscriptions: many(subscriptions),
+}));
+
+export const profilesRelations = relations(profiles, ({ many }) => ({
+  subscriptions: many(subscriptions),
+}));
