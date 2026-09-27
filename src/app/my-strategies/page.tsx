@@ -78,15 +78,14 @@ export default async function MyStrategiesPage() {
                   >
                     View Details
                   </a>
-                  <button
-                    type="button"
-                    disabled
-                    className="flex-1 py-2.5 rounded-lg bg-accent text-white font-semibold text-sm opacity-55 cursor-not-allowed"
+                  <a
+                    href="/connect-account"
+                    className="flex-1 text-center py-2.5 rounded-lg bg-accent text-white font-semibold text-sm"
                   >
                     Deploy
-                  </button>
+                  </a>
                 </div>
-                <div className="text-xs text-text-secondary">Deploy to a trading account — coming in Phase 3</div>
+                <div className="text-xs text-text-secondary">Connect a trading account, then allocate capital — full deploy flow coming in Phase 4</div>
               </div>
             ))}
           </div>

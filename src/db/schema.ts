@@ -21,6 +21,12 @@ export const subscriptionStatusEnum = pgEnum("subscription_status", [
   "active",
   "canceled",
 ]);
+export const brokerEnum = pgEnum("broker", ["paper", "zerodha"]);
+export const tradingAccountStatusEnum = pgEnum("trading_account_status", [
+  "connected",
+  "disconnected",
+  "error",
+]);
 
 // One row per authenticated user, created automatically via a DB trigger
 // on auth.users insert (see src/db/sql/profile-trigger.sql).
@@ -73,6 +79,30 @@ export const subscriptions = pgTable("subscriptions", {
     .notNull(),
   canceledAt: timestamp("canceled_at", { withTimezone: true }),
 });
+
+export const tradingAccounts = pgTable("trading_accounts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  broker: brokerEnum("broker").notNull(),
+  nickname: text("nickname").notNull(),
+  status: tradingAccountStatusEnum("status").notNull().default("connected"),
+  // Opaque, encrypted JSON blob — shape is broker-specific (e.g. Zerodha's
+  // access_token + user id). Never stored or logged in plaintext.
+  encryptedCredentials: text("encrypted_credentials"),
+  brokerUserId: text("broker_user_id"),
+  connectedAt: timestamp("connected_at", { withTimezone: true }).defaultNow().notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  disconnectedAt: timestamp("disconnected_at", { withTimezone: true }),
+});
+
+export const tradingAccountsRelations = relations(tradingAccounts, ({ one }) => ({
+  profile: one(profiles, {
+    fields: [tradingAccounts.userId],
+    references: [profiles.id],
+  }),
+}));
 
 export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
   strategy: one(strategies, {
