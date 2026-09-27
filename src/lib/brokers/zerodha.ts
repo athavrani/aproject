@@ -126,6 +126,17 @@ export const zerodhaConnector: BrokerConnector = {
     }));
   },
 
+  async getQuote(session: BrokerSession, symbol: string, exchange: string): Promise<number> {
+    const key = `${exchange}:${symbol}`;
+    const quote = await kiteRequest<Record<string, { last_price: number }>>(
+      `/quote/ltp?i=${encodeURIComponent(key)}`,
+      { session }
+    );
+    const entry = quote[key];
+    if (!entry) throw new Error(`No quote returned for ${key}`);
+    return entry.last_price;
+  },
+
   async placeOrder(session: BrokerSession, order: OrderRequest): Promise<OrderResult> {
     const body = new URLSearchParams({
       tradingsymbol: order.symbol,

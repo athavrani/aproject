@@ -79,13 +79,12 @@ export default async function MyStrategiesPage() {
                     View Details
                   </a>
                   <a
-                    href="/connect-account"
+                    href={`/deploy/${sub.id}`}
                     className="flex-1 text-center py-2.5 rounded-lg bg-accent text-white font-semibold text-sm"
                   >
                     Deploy
                   </a>
                 </div>
-                <div className="text-xs text-text-secondary">Connect a trading account, then allocate capital — full deploy flow coming in Phase 4</div>
               </div>
             ))}
           </div>

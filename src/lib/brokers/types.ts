@@ -65,6 +65,7 @@ export interface BrokerConnector {
 
   getAccountBalance(session: BrokerSession): Promise<AccountBalance>;
   getPositions(session: BrokerSession): Promise<Position[]>;
+  getQuote(session: BrokerSession, symbol: string, exchange: string): Promise<number>;
   placeOrder(session: BrokerSession, order: OrderRequest): Promise<OrderResult>;
   cancelOrder(session: BrokerSession, brokerOrderId: string): Promise<void>;
 }

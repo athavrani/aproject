@@ -27,6 +27,12 @@ export const tradingAccountStatusEnum = pgEnum("trading_account_status", [
   "disconnected",
   "error",
 ]);
+export const deploymentStatusEnum = pgEnum("deployment_status", [
+  "active",
+  "paused",
+  "stopped",
+]);
+export const orderSideEnum = pgEnum("order_side", ["BUY", "SELL"]);
 
 // One row per authenticated user, created automatically via a DB trigger
 // on auth.users insert (see src/db/sql/profile-trigger.sql).
@@ -102,6 +108,56 @@ export const tradingAccountsRelations = relations(tradingAccounts, ({ one }) => 
     fields: [tradingAccounts.userId],
     references: [profiles.id],
   }),
+}));
+
+export const deployments = pgTable("deployments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  strategyId: uuid("strategy_id")
+    .notNull()
+    .references(() => strategies.id, { onDelete: "restrict" }),
+  tradingAccountId: uuid("trading_account_id")
+    .notNull()
+    .references(() => tradingAccounts.id, { onDelete: "restrict" }),
+  status: deploymentStatusEnum("status").notNull().default("active"),
+  capitalAllocation: numeric("capital_allocation", { precision: 12, scale: 2 }).notNull(),
+  maxDailyLoss: numeric("max_daily_loss", { precision: 12, scale: 2 }).notNull(),
+  realizedPnlToday: numeric("realized_pnl_today", { precision: 12, scale: 2 }).notNull().default("0"),
+  pnlDate: text("pnl_date"), // "YYYY-MM-DD" the realizedPnlToday figure applies to; resets on a new day
+  riskAcknowledgedAt: timestamp("risk_acknowledged_at", { withTimezone: true }).notNull(),
+  lastEvaluatedAt: timestamp("last_evaluated_at", { withTimezone: true }),
+  pausedReason: text("paused_reason"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const orders = pgTable("orders", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  deploymentId: uuid("deployment_id")
+    .notNull()
+    .references(() => deployments.id, { onDelete: "cascade" }),
+  brokerOrderId: text("broker_order_id").notNull(),
+  symbol: text("symbol").notNull(),
+  side: orderSideEnum("side").notNull(),
+  quantity: integer("quantity").notNull(),
+  price: numeric("price", { precision: 12, scale: 2 }).notNull(),
+  pnl: numeric("pnl", { precision: 12, scale: 2 }),
+  placedAt: timestamp("placed_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const deploymentsRelations = relations(deployments, ({ one, many }) => ({
+  strategy: one(strategies, { fields: [deployments.strategyId], references: [strategies.id] }),
+  tradingAccount: one(tradingAccounts, {
+    fields: [deployments.tradingAccountId],
+    references: [tradingAccounts.id],
+  }),
+  profile: one(profiles, { fields: [deployments.userId], references: [profiles.id] }),
+  orders: many(orders),
+}));
+
+export const ordersRelations = relations(orders, ({ one }) => ({
+  deployment: one(deployments, { fields: [orders.deploymentId], references: [deployments.id] }),
 }));
 
 export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({

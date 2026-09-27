@@ -40,6 +40,15 @@ export const paperConnector: BrokerConnector = {
     return [];
   },
 
+  async getQuote(_session: BrokerSession, symbol: string): Promise<number> {
+    // Deterministic-but-varying synthetic price so repeated evaluations of
+    // the same symbol don't always see the exact same number.
+    const seed = symbol.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    const base = 100 + (seed % 400);
+    const wobble = Math.sin(Date.now() / 60_000 + seed) * (base * 0.01);
+    return Math.round((base + wobble) * 100) / 100;
+  },
+
   async placeOrder(_session: BrokerSession, order: OrderRequest): Promise<OrderResult> {
     return {
       brokerOrderId: `paper-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
